@@ -1,7 +1,7 @@
 from collections import defaultdict, deque
 import math
 
-__author__ = 'Logsiny'
+__author__ = 'Meng Shi'
 
 
 class C45:
@@ -21,26 +21,16 @@ class C45:
             return '[' + str(self.attr_index) + ', ' + children + ', ' + str(self.classification) + ']'
 
     def __init__(self):
-        self.dtree = C45.Node()
-        # self.attr_values = []
-
-    """
-    def preprocess(self, data):
-        line_length = len(data[0])
-        self.attr_values = [{} for _ in range(line_length)]
-        for row in data:
-            for i in range(line_length):
-                if row[i] not in self.attr_values[i]:
-                    self.attr_values[i][row[i]] = 1
-                else:
-                    self.attr_values[i][row[i]] += 1
-    """
+        self.__dtree = C45.Node()
 
     def train(self, data):
+        self.__dtree = self.train_helper(data)
+
+    def train_helper(self, data):
         if data:
             ent = entropy(data)
             if ent == 0:  # all samples belong to the same class
-                return C45.Node(0, data[0][0])  # what if len(data[0]) == 0
+                return C45.Node(0, data[0][0])  # what if len(data[0]) == 0? can have a check here (not implemented)
             else:
                 gain_ratios = [gain_ratio(data, i, ent) for i in range(1, len(data[0]))] or [0]
                 max_ratio = max(gain_ratios)
@@ -55,12 +45,12 @@ class C45:
                     for row in data:
                         sub_data[row[max_index]] += [row[:max_index] + row[max_index + 1:]]
                     for value in sub_data:
-                        curr.children[value] = self.train(sub_data[value])
+                        curr.children[value] = self.train_helper(sub_data[value])
                     return curr
         return
 
     def test(self, data):
-        return [self.test_tree(self.dtree, row) for row in data]
+        return [self.test_tree(self.__dtree, row) for row in data]
 
     def test_tree(self, node, row):
         if node.attr_index == 0:
@@ -77,7 +67,7 @@ class C45:
     def __str__(self):
         ret = ""
         q = deque()
-        q.append(self.dtree)
+        q.append(self.__dtree)
         while q:
             for _ in range(len(q)):
                 curr = q.popleft()
@@ -105,7 +95,7 @@ def entropy(data):
     length = len(data)
     counts = defaultdict(int)
     for row in data:
-        counts[row[0]] += 1  # what if row[0] doesn't exist? no really possible. row[0] is class bit.
+        counts[row[0]] += 1  # what if row[0] doesn't exist? no really possible. row[0] is the class attribute.
     probs = [counts[cls] / (length * 1.0) for cls in counts]
     info = - sum(prob * math.log(prob, 2) for prob in probs)
     return info
