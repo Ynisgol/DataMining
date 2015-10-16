@@ -1,7 +1,9 @@
+#!/usr/bin/python
+
 from C45 import *
 # import sys
 
-__author__ = 'Logsiny'
+__author__ = 'Meng Shi'
 
 
 def read_file(filename):
@@ -27,4 +29,4 @@ count = 0
 for i in range(len(result)):
     if result[i] == control[i]:
         count += 1
-print "Accuracy: " + str(count / (len(result) * 1.0))
+print "Accuracy: " + str(count / (len(result) * 1.0) * 100) + '%'

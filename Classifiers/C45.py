@@ -23,10 +23,26 @@ class C45:
     def __init__(self):
         self.__dtree = C45.Node()
 
-    def train(self, data):
-        self.__dtree = self.train_helper(data)
+    def __str__(self):
+        ret = ""
+        q = deque()
+        q.append(self.__dtree)
+        while q:
+            for _ in range(len(q)):
+                curr = q.popleft()
+                ret += curr.__str__() + ', '
+                for child in curr.children:
+                    q.append(curr.children[child])
+            ret += '\n'
+        return ret
 
-    def train_helper(self, data):
+    def train(self, data):
+        self.__dtree = self.__train_helper(data)
+
+    def test(self, data):
+        return [self.__test_tree(self.__dtree, row) for row in data]
+
+    def __train_helper(self, data):
         if data:
             ent = entropy(data)
             if ent == 0:  # all samples belong to the same class
@@ -45,37 +61,21 @@ class C45:
                     for row in data:
                         sub_data[row[max_index]] += [row[:max_index] + row[max_index + 1:]]
                     for value in sub_data:
-                        curr.children[value] = self.train_helper(sub_data[value])
+                        curr.children[value] = self.__train_helper(sub_data[value])
                     return curr
         return
 
-    def test(self, data):
-        return [self.test_tree(self.__dtree, row) for row in data]
-
-    def test_tree(self, node, row):
+    def __test_tree(self, node, row):
         if node.attr_index == 0:
             return node.classification
         else:
             attr_value = row[node.attr_index]
             if attr_value in node.children:
                 # class has been identified before
-                return self.test_tree(node.children[attr_value], row[:node.attr_index] + row[node.attr_index + 1:])
+                return self.__test_tree(node.children[attr_value], row[:node.attr_index] + row[node.attr_index + 1:])
             else:
                 # class unseen before
                 return node.classification
-
-    def __str__(self):
-        ret = ""
-        q = deque()
-        q.append(self.__dtree)
-        while q:
-            for _ in range(len(q)):
-                curr = q.popleft()
-                ret += curr.__str__() + ', '
-                for child in curr.children:
-                    q.append(curr.children[child])
-            ret += '\n'
-        return ret
 
     @staticmethod
     def get_expect(data):
