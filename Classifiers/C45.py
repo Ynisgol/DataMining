@@ -15,12 +15,16 @@ class C45:
             self.classification = classification
 
         def __str__(self):
-            return '[' + str(self.attr_index) + ', ' + str(self.classification) + ']'
+            children = ""
+            for key in self.children:
+                children += str(key)
+            return '[' + str(self.attr_index) + ', ' + children + ', ' + str(self.classification) + ']'
 
     def __init__(self):
         self.dtree = C45.Node()
-        self.attr_values = []
+        # self.attr_values = []
 
+    """
     def preprocess(self, data):
         line_length = len(data[0])
         self.attr_values = [{} for _ in range(line_length)]
@@ -30,6 +34,7 @@ class C45:
                     self.attr_values[i][row[i]] = 1
                 else:
                     self.attr_values[i][row[i]] += 1
+    """
 
     def train(self, data):
         if data:
@@ -39,20 +44,35 @@ class C45:
             else:
                 gain_ratios = [gain_ratio(data, i, ent) for i in range(1, len(data[0]))] or [0]
                 max_ratio = max(gain_ratios)
-                if max_ratio == 0:
-                    expected_key, expected_value = C45.get_expect(data)
-                    return C45.Node(0, expected_key)
+                # expected_value is the expected class at current node
+                expected_value, expected_count = C45.get_expect(data)
+                if max_ratio == 0:  # no attribute has an impact on classification
+                    return C45.Node(0, expected_value)
                 else:
                     max_index = gain_ratios.index(max_ratio) + 1
-                    curr = C45.Node(max_index)
+                    curr = C45.Node(max_index, expected_value)
                     sub_data = defaultdict(list)
                     for row in data:
                         sub_data[row[max_index]] += [row[:max_index] + row[max_index + 1:]]
-                    for value in self.attr_values[max_index]:
-                        if value in sub_data:
-                            curr.children[value] = self.train(sub_data[value])
+                    for value in sub_data:
+                        curr.children[value] = self.train(sub_data[value])
                     return curr
         return
+
+    def test(self, data):
+        return [self.test_tree(self.dtree, row) for row in data]
+
+    def test_tree(self, node, row):
+        if node.attr_index == 0:
+            return node.classification
+        else:
+            attr_value = row[node.attr_index]
+            if attr_value in node.children:
+                # class has been identified before
+                return self.test_tree(node.children[attr_value], row[:node.attr_index] + row[node.attr_index + 1:])
+            else:
+                # class unseen before
+                return node.classification
 
     def __str__(self):
         ret = ""
