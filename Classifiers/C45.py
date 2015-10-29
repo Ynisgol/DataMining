@@ -1,7 +1,7 @@
 from collections import defaultdict, deque
 import math
 
-__author__ = 'Meng Shi'
+__author__ = 'MengShi&YiDeng'
 
 
 class C45:
